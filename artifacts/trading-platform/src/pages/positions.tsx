@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { 
   useListPositions, 
   useClosePosition, 
@@ -98,7 +98,9 @@ function Sparkline({ ticker, gainLossPercent }: { ticker: string; gainLossPercen
 }
 
 export default function Positions() {
-  const { data: positions, isLoading } = useListPositions();
+  const { data: positions, isLoading, dataUpdatedAt } = useListPositions({
+    query: { refetchInterval: 30000 }
+  });
   const closePosition = useClosePosition();
   const updatePosition = useUpdatePosition();
   const createPosition = useCreatePosition();
@@ -108,6 +110,38 @@ export default function Positions() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState({ ticker: "", companyName: "", shares: "", avgCostBasis: "" });
   const [trimState, setTrimState] = useState<{ id: number; currentShares: number; amount: string } | null>(null);
+  const [flashStates, setFlashStates] = useState<Record<number, "up" | "down">>({});
+  const [secondsAgo, setSecondsAgo] = useState(0);
+  const prevPrices = useRef<Record<number, number>>({});
+  const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!positions) return;
+    const newFlashes: Record<number, "up" | "down"> = {};
+    positions.forEach((pos) => {
+      const prev = prevPrices.current[pos.id];
+      if (prev != null && prev !== pos.currentPrice) {
+        newFlashes[pos.id] = pos.currentPrice > prev ? "up" : "down";
+      }
+      prevPrices.current[pos.id] = pos.currentPrice;
+    });
+    if (Object.keys(newFlashes).length > 0) {
+      if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+      setFlashStates(newFlashes);
+      flashTimerRef.current = setTimeout(() => setFlashStates({}), 800);
+    }
+    setSecondsAgo(0);
+    return () => {
+      if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+    };
+  }, [dataUpdatedAt]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSecondsAgo((s) => s + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -185,7 +219,14 @@ export default function Positions() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-lg font-mono font-bold tracking-[0.1em] text-foreground uppercase">Active Positions</h1>
-          <p className="text-[11px] text-muted-foreground font-mono mt-0.5">Open trades, risk weights, and tactical exit management.</p>
+          <div className="flex items-center gap-2">
+            <p className="text-[11px] text-muted-foreground font-mono mt-0.5">Open trades, risk weights, and tactical exit management.</p>
+            {!isLoading && (
+              <span className="text-[10px] text-muted-foreground/60 font-mono mt-0.5">
+                · Updated {secondsAgo === 0 ? "just now" : `${secondsAgo}s ago`}
+              </span>
+            )}
+          </div>
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
@@ -280,10 +321,24 @@ export default function Positions() {
                           <span className="font-mono text-xs text-muted-foreground">@ {formatCurrency(pos.avgCostBasis)}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right relative">
+                        <motion.div
+                          className="absolute inset-0 rounded pointer-events-none"
+                          animate={{
+                            backgroundColor: flashStates[pos.id] === "up"
+                              ? ["rgba(34,197,94,0.25)", "rgba(34,197,94,0)"]
+                              : flashStates[pos.id] === "down"
+                              ? ["rgba(239,68,68,0.25)", "rgba(239,68,68,0)"]
+                              : "rgba(0,0,0,0)"
+                          }}
+                          transition={{ duration: 0.8 }}
+                        />
                         <div className="flex flex-col items-end">
                           <span className="font-mono text-sm">{formatCurrency(pos.marketValue)}</span>
-                          <span className="font-mono text-xs text-muted-foreground">{formatCurrency(pos.currentPrice)}/sh</span>
+                          <span className={cn(
+                            "font-mono text-xs transition-colors duration-300",
+                            flashStates[pos.id] === "up" ? "text-green-400" : flashStates[pos.id] === "down" ? "text-red-400" : "text-muted-foreground"
+                          )}>{formatCurrency(pos.currentPrice)}/sh</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-right">

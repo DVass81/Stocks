@@ -36,14 +36,24 @@ function formatPosition(p: typeof positionsTable.$inferSelect) {
   };
 }
 
+function simulateLivePrice(price: number): number {
+  const changePct = (Math.random() - 0.5) * 0.01;
+  return parseFloat((price * (1 + changePct)).toFixed(price < 0.01 ? 8 : price < 1 ? 6 : 4));
+}
+
 router.get("/", async (req, res) => {
   const positions = await db.select().from(positionsTable);
 
-  const totalValue = positions
+  const livePositions = positions.map((p) => ({
+    ...p,
+    currentPrice: simulateLivePrice(parseFloat(p.currentPrice)).toString(),
+  }));
+
+  const totalValue = livePositions
     .filter((p) => p.status === "active")
     .reduce((sum, p) => sum + parseFloat(p.shares) * parseFloat(p.currentPrice), 0);
 
-  const result = positions.map((p) => {
+  const result = livePositions.map((p) => {
     const mv = parseFloat(p.shares) * parseFloat(p.currentPrice);
     return { ...formatPosition(p), portfolioWeight: totalValue > 0 ? (mv / totalValue) * 100 : 0 };
   });
