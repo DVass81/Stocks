@@ -3,20 +3,32 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Trading platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: portfolio
+    description: Portfolio management
+  - name: positions
+    description: Position management
+  - name: strategy
+    description: Trading strategy settings
+  - name: activity
+    description: Trade activity and history
+  - name: watchlist
+    description: Watchlist management
+  - name: market
+    description: Market data
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +36,258 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /portfolio/summary:
+    get:
+      operationId: getPortfolioSummary
+      tags: [portfolio]
+      summary: Get portfolio summary stats
+      responses:
+        "200":
+          description: Portfolio summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioSummary"
+
+  /positions:
+    get:
+      operationId: listPositions
+      tags: [positions]
+      summary: List all positions
+      responses:
+        "200":
+          description: List of positions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Position"
+    post:
+      operationId: createPosition
+      tags: [positions]
+      summary: Open a new position
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePositionBody"
+      responses:
+        "201":
+          description: Position created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Position"
+
+  /positions/{id}:
+    get:
+      operationId: getPosition
+      tags: [positions]
+      summary: Get a position
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Position details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Position"
+    put:
+      operationId: updatePosition
+      tags: [positions]
+      summary: Update a position (trim/add)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePositionBody"
+      responses:
+        "200":
+          description: Updated position
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Position"
+    delete:
+      operationId: closePosition
+      tags: [positions]
+      summary: Close/exit a position
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Position closed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Position"
+
+  /strategy:
+    get:
+      operationId: getStrategy
+      tags: [strategy]
+      summary: Get current strategy settings
+      responses:
+        "200":
+          description: Strategy settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Strategy"
+    put:
+      operationId: updateStrategy
+      tags: [strategy]
+      summary: Update strategy settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStrategyBody"
+      responses:
+        "200":
+          description: Updated strategy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Strategy"
+
+  /strategy/apply-preset:
+    post:
+      operationId: applyStrategyPreset
+      tags: [strategy]
+      summary: Apply a strategy preset (balanced or conservative)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplyPresetBody"
+      responses:
+        "200":
+          description: Preset applied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Strategy"
+
+  /activity:
+    get:
+      operationId: listActivity
+      tags: [activity]
+      summary: List recent trade activity
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Activity feed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TradeActivity"
+
+  /watchlist:
+    get:
+      operationId: listWatchlist
+      tags: [watchlist]
+      summary: Get watchlist items
+      responses:
+        "200":
+          description: Watchlist
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WatchlistItem"
+    post:
+      operationId: addToWatchlist
+      tags: [watchlist]
+      summary: Add a ticker to watchlist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddWatchlistBody"
+      responses:
+        "201":
+          description: Added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WatchlistItem"
+
+  /watchlist/{id}:
+    delete:
+      operationId: removeFromWatchlist
+      tags: [watchlist]
+      summary: Remove from watchlist
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Removed
+
+  /market/movers:
+    get:
+      operationId: getMarketMovers
+      tags: [market]
+      summary: Get top market movers
+      responses:
+        "200":
+          description: Market movers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MarketMover"
+
+  /portfolio/performance:
+    get:
+      operationId: getPortfolioPerformance
+      tags: [portfolio]
+      summary: Get portfolio performance over time (chart data)
+      responses:
+        "200":
+          description: Performance data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PerformancePoint"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +295,321 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    PortfolioSummary:
+      type: object
+      properties:
+        totalValue:
+          type: number
+        cashReserve:
+          type: number
+        deployedCapital:
+          type: number
+        dayGainLoss:
+          type: number
+        dayGainLossPercent:
+          type: number
+        totalGainLoss:
+          type: number
+        totalGainLossPercent:
+          type: number
+        openPositions:
+          type: integer
+        winRate:
+          type: number
+      required:
+        - totalValue
+        - cashReserve
+        - deployedCapital
+        - dayGainLoss
+        - dayGainLossPercent
+        - totalGainLoss
+        - totalGainLossPercent
+        - openPositions
+        - winRate
+
+    Position:
+      type: object
+      properties:
+        id:
+          type: integer
+        ticker:
+          type: string
+        companyName:
+          type: string
+        shares:
+          type: number
+        avgCostBasis:
+          type: number
+        currentPrice:
+          type: number
+        marketValue:
+          type: number
+        gainLoss:
+          type: number
+        gainLossPercent:
+          type: number
+        portfolioWeight:
+          type: number
+        rsiValue:
+          type: number
+        status:
+          type: string
+          enum: [active, trimmed, stopped_out, closed]
+        strength:
+          type: string
+          enum: [strong, weak, neutral]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - ticker
+        - companyName
+        - shares
+        - avgCostBasis
+        - currentPrice
+        - marketValue
+        - gainLoss
+        - gainLossPercent
+        - portfolioWeight
+        - rsiValue
+        - status
+        - strength
+        - createdAt
+
+    CreatePositionBody:
+      type: object
+      properties:
+        ticker:
+          type: string
+        companyName:
+          type: string
+        shares:
+          type: number
+        avgCostBasis:
+          type: number
+      required: [ticker, companyName, shares, avgCostBasis]
+
+    UpdatePositionBody:
+      type: object
+      properties:
+        shares:
+          type: number
+        avgCostBasis:
+          type: number
+        currentPrice:
+          type: number
+
+    Strategy:
+      type: object
+      properties:
+        id:
+          type: integer
+        preset:
+          type: string
+          enum: [balanced, conservative, custom]
+        riskMode:
+          type: string
+          enum: [auto, manual]
+        minCashReserve:
+          type: number
+        absoluteMinTrade:
+          type: number
+        maxTradePercent:
+          type: number
+        allocationTolerance:
+          type: number
+        starterFillPercent:
+          type: number
+        ownedAddFillPercent:
+          type: number
+        watchBuyScaler:
+          type: number
+        trimProfitPercent:
+          type: number
+        hardExitLossPercent:
+          type: number
+        tacticalExitLossPercent:
+          type: number
+        tacticalExitRequiredSignals:
+          type: integer
+        tacticalExitRsiMax:
+          type: integer
+        tacticalExitRangePositionMax:
+          type: integer
+        tacticalExitOffHighMinPercent:
+          type: number
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - preset
+        - riskMode
+        - minCashReserve
+        - absoluteMinTrade
+        - maxTradePercent
+        - allocationTolerance
+        - starterFillPercent
+        - ownedAddFillPercent
+        - watchBuyScaler
+        - trimProfitPercent
+        - hardExitLossPercent
+        - tacticalExitLossPercent
+        - tacticalExitRequiredSignals
+        - tacticalExitRsiMax
+        - tacticalExitRangePositionMax
+        - tacticalExitOffHighMinPercent
+        - updatedAt
+
+    UpdateStrategyBody:
+      type: object
+      properties:
+        preset:
+          type: string
+        riskMode:
+          type: string
+        minCashReserve:
+          type: number
+        absoluteMinTrade:
+          type: number
+        maxTradePercent:
+          type: number
+        allocationTolerance:
+          type: number
+        starterFillPercent:
+          type: number
+        ownedAddFillPercent:
+          type: number
+        watchBuyScaler:
+          type: number
+        trimProfitPercent:
+          type: number
+        hardExitLossPercent:
+          type: number
+        tacticalExitLossPercent:
+          type: number
+        tacticalExitRequiredSignals:
+          type: integer
+        tacticalExitRsiMax:
+          type: integer
+        tacticalExitRangePositionMax:
+          type: integer
+        tacticalExitOffHighMinPercent:
+          type: number
+
+    ApplyPresetBody:
+      type: object
+      properties:
+        preset:
+          type: string
+          enum: [balanced, conservative]
+      required: [preset]
+
+    TradeActivity:
+      type: object
+      properties:
+        id:
+          type: integer
+        ticker:
+          type: string
+        action:
+          type: string
+          enum: [buy, sell, trim, add, stop_out, tactical_exit]
+        shares:
+          type: number
+        price:
+          type: number
+        totalValue:
+          type: number
+        gainLoss:
+          type: number
+        gainLossPercent:
+          type: number
+        reason:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - ticker
+        - action
+        - shares
+        - price
+        - totalValue
+        - createdAt
+
+    WatchlistItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        ticker:
+          type: string
+        companyName:
+          type: string
+        currentPrice:
+          type: number
+        dayChangePercent:
+          type: number
+        targetBuyPrice:
+          type: number
+        rsiValue:
+          type: number
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - ticker
+        - companyName
+        - currentPrice
+        - dayChangePercent
+        - rsiValue
+        - createdAt
+
+    AddWatchlistBody:
+      type: object
+      properties:
+        ticker:
+          type: string
+        companyName:
+          type: string
+        targetBuyPrice:
+          type: number
+        notes:
+          type: string
+      required: [ticker, companyName]
+
+    MarketMover:
+      type: object
+      properties:
+        ticker:
+          type: string
+        companyName:
+          type: string
+        price:
+          type: number
+        changePercent:
+          type: number
+        volume:
+          type: number
+        sector:
+          type: string
+      required: [ticker, companyName, price, changePercent, volume]
+
+    PerformancePoint:
+      type: object
+      properties:
+        date:
+          type: string
+        value:
+          type: number
+        benchmark:
+          type: number
+      required: [date, value, benchmark]
