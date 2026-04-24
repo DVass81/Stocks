@@ -38,17 +38,18 @@ const SMALL_CAP_TICKERS = new Set(["BFFGB", "LUNR"]);
 
 type AssetClass = "CRYPTO" | "EQUITY" | "SMALL CAP";
 
-function getAssetClass(ticker: string): AssetClass {
+function getAssetClass(ticker: string, currentPrice?: number): AssetClass {
   if (CRYPTO_TICKERS.has(ticker.toUpperCase())) return "CRYPTO";
   if (SMALL_CAP_TICKERS.has(ticker.toUpperCase())) return "SMALL CAP";
+  if (currentPrice != null && currentPrice > 0 && currentPrice < 20) return "SMALL CAP";
   return "EQUITY";
 }
 
-function generateSparklineData(ticker: string, gainLossPercent: number) {
+function generateSparklineData(ticker: string, gainLossPercent: number, isFlat = false) {
   let seed = 0;
   for (let i = 0; i < ticker.length; i++) seed += ticker.charCodeAt(i);
   const isUp = gainLossPercent >= 0;
-  const trend = isUp ? 0.012 : -0.013;
+  const trend = isFlat ? 0 : isUp ? 0.012 : -0.013;
   const points: { v: number }[] = [];
   let val = 100;
   for (let i = 0; i < 7; i++) {
@@ -59,8 +60,8 @@ function generateSparklineData(ticker: string, gainLossPercent: number) {
   return points;
 }
 
-function AssetClassBadge({ ticker }: { ticker: string }) {
-  const cls = getAssetClass(ticker);
+function AssetClassBadge({ ticker, currentPrice }: { ticker: string; currentPrice: number }) {
+  const cls = getAssetClass(ticker, currentPrice);
   const styles: Record<AssetClass, string> = {
     CRYPTO: "bg-purple-500/15 text-purple-400 border border-purple-500/25",
     EQUITY: "bg-blue-500/15 text-blue-400 border border-blue-500/25",
@@ -73,10 +74,11 @@ function AssetClassBadge({ ticker }: { ticker: string }) {
   );
 }
 
-function Sparkline({ ticker, gainLoss }: { ticker: string; gainLoss: number }) {
-  const data = generateSparklineData(ticker, gainLoss);
+function Sparkline({ ticker, gainLossPercent }: { ticker: string; gainLossPercent: number }) {
+  const isFlat = gainLossPercent === 0;
+  const data = generateSparklineData(ticker, gainLossPercent, isFlat);
   const color =
-    gainLoss > 0 ? "#22c55e" : gainLoss < 0 ? "#ef4444" : "#6b7280";
+    gainLossPercent > 0 ? "#22c55e" : gainLossPercent < 0 ? "#ef4444" : "#6b7280";
   return (
     <div className="w-[80px] h-[32px]">
       <ResponsiveContainer width="100%" height="100%">
@@ -269,7 +271,7 @@ export default function Positions() {
                         <div className="flex flex-col gap-1">
                           <span className="font-mono text-sm font-bold">{pos.ticker}</span>
                           <span className="text-[10px] text-muted-foreground truncate w-20">{pos.companyName}</span>
-                          <AssetClassBadge ticker={pos.ticker} />
+                          <AssetClassBadge ticker={pos.ticker} currentPrice={pos.currentPrice} />
                         </div>
                       </TableCell>
                       <TableCell>
@@ -310,7 +312,7 @@ export default function Positions() {
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex justify-center">
-                          <Sparkline ticker={pos.ticker} gainLoss={pos.gainLoss} />
+                          <Sparkline ticker={pos.ticker} gainLossPercent={pos.gainLossPercent} />
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
