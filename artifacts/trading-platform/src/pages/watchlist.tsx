@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useListWatchlist, useAddToWatchlist, useRemoveFromWatchlist } from "@workspace/api-client-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,10 +7,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { formatCurrency, formatPercent, cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
-import { Trash2, TrendingUp, TrendingDown, Target, Activity as ActivityIcon } from "lucide-react";
+import { Trash2, Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { getListWatchlistQueryKey } from "@workspace/api-client-react";
+
+function RsiBadge({ rsi }: { rsi: number }) {
+  if (rsi > 70) return <span className="font-mono text-[11px] text-[#ef4444] font-semibold">{rsi.toFixed(1)} <span className="text-[9px] opacity-70">OB</span></span>;
+  if (rsi < 30) return <span className="font-mono text-[11px] text-[#22c55e] font-semibold">{rsi.toFixed(1)} <span className="text-[9px] opacity-70">OS</span></span>;
+  return <span className="font-mono text-[11px] text-muted-foreground">{rsi.toFixed(1)}</span>;
+}
 
 export default function Watchlist() {
   const { data: watchlist, isLoading } = useListWatchlist();
@@ -30,14 +35,14 @@ export default function Watchlist() {
         ticker: form.ticker.toUpperCase(),
         companyName: form.companyName,
         targetBuyPrice: form.targetBuyPrice ? Number(form.targetBuyPrice) : undefined,
-        notes: form.notes || undefined
+        notes: form.notes || undefined,
       }
     }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListWatchlistQueryKey() });
         setIsOpen(false);
         setForm({ ticker: "", companyName: "", targetBuyPrice: "", notes: "" });
-        toast({ title: "Added to Watchlist", description: `Successfully tracking ${form.ticker}` });
+        toast({ title: "Added to Watchlist", description: `Now tracking ${form.ticker.toUpperCase()}` });
       }
     });
   };
@@ -51,54 +56,53 @@ export default function Watchlist() {
     });
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.1 } }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, scale: 0.95 },
-    show: { opacity: 1, scale: 1 }
-  };
+  const COL = "text-[10px] font-mono font-bold tracking-[0.12em] text-muted-foreground uppercase py-2 px-3 border-b border-border bg-black/20";
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-bold tracking-tight">Watchlist</h1>
-          <p className="text-muted-foreground text-sm">Monitor technical setups and target buy prices.</p>
+    <div className="space-y-4">
+
+      {/* Header */}
+      <div className="flex items-end justify-between">
+        <div>
+          <h1 className="text-lg font-mono font-bold tracking-[0.1em] text-foreground uppercase">Watchlist</h1>
+          <p className="text-[11px] text-muted-foreground font-mono mt-0.5">Technical setups and target entry prices under surveillance.</p>
         </div>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium tracking-wide w-full sm:w-auto">
-              ADD TICKER
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-mono text-[11px] tracking-[0.1em] h-8 px-4 gap-2">
+              <Plus className="w-3.5 h-3.5" /> ADD TICKER
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px] border-border bg-card">
+          <DialogContent className="sm:max-w-[420px] border-border bg-card rounded-none">
             <DialogHeader>
-              <DialogTitle>Add to Watchlist</DialogTitle>
+              <DialogTitle className="font-mono text-sm tracking-wider uppercase">Add to Watchlist</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleAdd} className="space-y-4 pt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="ticker">Ticker</Label>
-                  <Input id="ticker" value={form.ticker} onChange={e => setForm({...form, ticker: e.target.value})} placeholder="MSFT" required className="font-mono uppercase bg-background" />
+            <form onSubmit={handleAdd} className="space-y-4 pt-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">Ticker</Label>
+                  <Input value={form.ticker} onChange={e => setForm({ ...form, ticker: e.target.value })}
+                    placeholder="MSFT" required className="font-mono uppercase bg-background rounded-none text-sm h-8" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="targetBuyPrice">Target Buy ($)</Label>
-                  <Input id="targetBuyPrice" type="number" step="0.01" value={form.targetBuyPrice} onChange={e => setForm({...form, targetBuyPrice: e.target.value})} placeholder="350.00" className="font-mono bg-background" />
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">Target Buy ($)</Label>
+                  <Input type="number" step="0.01" value={form.targetBuyPrice} onChange={e => setForm({ ...form, targetBuyPrice: e.target.value })}
+                    placeholder="350.00" className="font-mono bg-background rounded-none text-sm h-8" />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="companyName">Company Name</Label>
-                <Input id="companyName" value={form.companyName} onChange={e => setForm({...form, companyName: e.target.value})} placeholder="Microsoft Corp." required className="bg-background" />
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">Company Name</Label>
+                <Input value={form.companyName} onChange={e => setForm({ ...form, companyName: e.target.value })}
+                  placeholder="Microsoft Corp." required className="bg-background rounded-none text-sm h-8" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Input id="notes" value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} placeholder="Waiting for RSI crossover..." className="bg-background" />
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">Notes</Label>
+                <Input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
+                  placeholder="Watching for RSI crossover..." className="bg-background rounded-none text-sm h-8" />
               </div>
-              <DialogFooter className="pt-4">
-                <Button type="submit" disabled={addWatchlist.isPending} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium">
+              <DialogFooter className="pt-2">
+                <Button type="submit" disabled={addWatchlist.isPending}
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-mono text-[11px] tracking-widest rounded-none h-9">
                   {addWatchlist.isPending ? "ADDING..." : "ADD TICKER"}
                 </Button>
               </DialogFooter>
@@ -107,95 +111,130 @@ export default function Watchlist() {
         </Dialog>
       </div>
 
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {Array(6).fill(0).map((_, i) => (
-            <Skeleton key={i} className="h-40 w-full bg-card rounded-lg" />
-          ))}
-        </div>
-      ) : watchlist?.length === 0 ? (
-        <div className="text-center py-20 bg-card rounded-lg border border-border border-dashed">
-          <ActivityIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-          <h3 className="text-lg font-medium">Watchlist is empty</h3>
-          <p className="text-muted-foreground text-sm mt-1 max-w-sm mx-auto">Start tracking technical setups by adding tickers you want to monitor for entry signals.</p>
-        </div>
-      ) : (
-        <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {watchlist?.map((item) => (
-            <motion.div key={item.id} variants={itemVariants}>
-              <Card className="bg-card border-border hover:border-border/80 transition-colors group relative overflow-hidden h-full">
-                <div className={cn("absolute top-0 left-0 w-1 h-full", item.dayChangePercent >= 0 ? "bg-green-500/50" : "bg-destructive/50")} />
-                
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                  onClick={() => handleRemove(item.id, item.ticker)}
-                  disabled={removeWatchlist.isPending}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+      {/* Table */}
+      <div className="bg-card border border-border overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr>
+                <th className={cn(COL, "text-left w-40")}>TICKER</th>
+                <th className={cn(COL, "text-right")}>PRICE</th>
+                <th className={cn(COL, "text-right")}>DAY CHG</th>
+                <th className={cn(COL, "text-right")}>TARGET BUY</th>
+                <th className={cn(COL, "text-right")}>DISTANCE</th>
+                <th className={cn(COL, "text-center")}>RSI</th>
+                <th className={cn(COL, "text-left px-4")}>NOTES</th>
+                <th className={cn(COL, "text-center w-12")}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                Array(5).fill(0).map((_, i) => (
+                  <tr key={i} className="border-b border-border/40">
+                    {Array(8).fill(0).map((__, j) => (
+                      <td key={j} className="px-3 py-3">
+                        <Skeleton className="h-4 w-full bg-background/50" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : watchlist?.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="text-center py-16 text-muted-foreground font-mono text-xs tracking-wider">
+                    NO TICKERS UNDER SURVEILLANCE
+                  </td>
+                </tr>
+              ) : (
+                watchlist?.map((item, idx) => {
+                  const isUp = item.dayChangePercent >= 0;
+                  const atTarget = item.targetBuyPrice != null && item.currentPrice <= item.targetBuyPrice;
+                  const distance = item.targetBuyPrice != null
+                    ? (item.currentPrice - item.targetBuyPrice) / item.targetBuyPrice
+                    : null;
 
-                <CardContent className="p-5">
-                  <div className="flex justify-between items-start mb-4 pr-6">
-                    <div>
-                      <h3 className="font-mono text-xl font-bold">{item.ticker}</h3>
-                      <p className="text-xs text-muted-foreground truncate max-w-[150px]">{item.companyName}</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-mono text-lg font-bold">{formatCurrency(item.currentPrice)}</div>
-                      <div className={cn("flex items-center justify-end gap-1 text-xs font-mono font-medium", item.dayChangePercent >= 0 ? "text-green-500" : "text-destructive")}>
-                        {item.dayChangePercent >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                        {item.dayChangePercent > 0 ? "+" : ""}{formatPercent(item.dayChangePercent)}
-                      </div>
-                    </div>
-                  </div>
+                  return (
+                    <motion.tr
+                      key={item.id}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.04 }}
+                      className="border-b border-border/40 hover:bg-white/2 transition-colors group"
+                    >
+                      {/* Ticker */}
+                      <td className="px-3 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className={cn("w-0.5 h-7 shrink-0", isUp ? "bg-[#22c55e]/60" : "bg-[#ef4444]/60")} />
+                          <div>
+                            <div className="font-mono font-bold text-[13px] text-foreground">{item.ticker}</div>
+                            <div className="font-mono text-[10px] text-muted-foreground truncate max-w-[100px]">{item.companyName}</div>
+                          </div>
+                        </div>
+                      </td>
 
-                  <div className="grid grid-cols-2 gap-4 mt-6 pt-4 border-t border-border/50">
-                    <div>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1 flex items-center gap-1">
-                        <Target className="w-3 h-3" /> Target Buy
-                      </p>
-                      <div className="font-mono text-sm">
-                        {item.targetBuyPrice ? (
-                          <span className={item.currentPrice <= item.targetBuyPrice ? "text-green-500 font-bold" : ""}>
+                      {/* Price */}
+                      <td className="px-3 py-3 text-right">
+                        <span className="font-mono text-[13px] text-foreground">{formatCurrency(item.currentPrice)}</span>
+                      </td>
+
+                      {/* Day change */}
+                      <td className="px-3 py-3 text-right">
+                        <span className={cn("font-mono text-[12px] font-semibold", isUp ? "text-[#22c55e]" : "text-[#ef4444]")}>
+                          {isUp ? "▲" : "▼"} {formatPercent(Math.abs(item.dayChangePercent))}
+                        </span>
+                      </td>
+
+                      {/* Target buy */}
+                      <td className="px-3 py-3 text-right">
+                        {item.targetBuyPrice != null ? (
+                          <span className={cn("font-mono text-[12px]", atTarget ? "text-[#22c55e] font-bold" : "text-muted-foreground")}>
                             {formatCurrency(item.targetBuyPrice)}
                           </span>
-                        ) : <span className="text-muted-foreground">-</span>}
-                      </div>
-                      {item.targetBuyPrice && (
-                        <div className="text-xs text-muted-foreground mt-0.5">
-                          {formatPercent((item.currentPrice - item.targetBuyPrice) / item.targetBuyPrice)} away
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1 flex items-center gap-1">
-                        <ActivityIcon className="w-3 h-3" /> Daily RSI
-                      </p>
-                      <div className={cn(
-                        "font-mono text-sm", 
-                        item.rsiValue > 70 ? "text-destructive" : item.rsiValue < 30 ? "text-green-500 font-bold" : ""
-                      )}>
-                        {item.rsiValue.toFixed(1)}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        {item.rsiValue > 70 ? "Overbought" : item.rsiValue < 30 ? "Oversold" : "Neutral"}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {item.notes && (
-                    <div className="mt-4 pt-3 border-t border-border/50">
-                      <p className="text-xs text-muted-foreground italic leading-relaxed">"{item.notes}"</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </motion.div>
-      )}
+                        ) : (
+                          <span className="text-muted-foreground font-mono text-[11px]">—</span>
+                        )}
+                      </td>
+
+                      {/* Distance from target */}
+                      <td className="px-3 py-3 text-right">
+                        {distance != null ? (
+                          <span className={cn("font-mono text-[11px]", atTarget ? "text-[#22c55e] font-semibold" : "text-muted-foreground")}>
+                            {atTarget ? "✓ AT TARGET" : `${formatPercent(Math.abs(distance))} away`}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground font-mono text-[11px]">—</span>
+                        )}
+                      </td>
+
+                      {/* RSI */}
+                      <td className="px-3 py-3 text-center">
+                        <RsiBadge rsi={item.rsiValue} />
+                      </td>
+
+                      {/* Notes */}
+                      <td className="px-4 py-3">
+                        <span className="font-mono text-[11px] text-muted-foreground italic">
+                          {item.notes ? `"${item.notes}"` : "—"}
+                        </span>
+                      </td>
+
+                      {/* Remove */}
+                      <td className="px-3 py-3 text-center">
+                        <button
+                          onClick={() => handleRemove(item.id, item.ticker)}
+                          disabled={removeWatchlist.isPending}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-[#ef4444]"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </motion.tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

@@ -39,23 +39,25 @@ export default function Activity() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight">Trade Activity</h1>
-        <p className="text-muted-foreground text-sm">Comprehensive log of all automated and manual trade executions.</p>
+      <div className="flex items-end justify-between">
+        <div>
+          <h1 className="text-lg font-mono font-bold tracking-[0.1em] text-foreground uppercase">Trade Activity</h1>
+          <p className="text-[11px] text-muted-foreground font-mono mt-0.5">Complete log of all automated and manual trade executions.</p>
+        </div>
       </div>
 
-      <Card className="bg-card border-border overflow-hidden">
+      <Card className="bg-card border-border overflow-hidden rounded-none">
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-black/20">
+            <TableHeader className="bg-black/25">
               <TableRow className="border-border/50 hover:bg-transparent">
-                <TableHead className="w-[180px] font-semibold tracking-wider text-xs">TIME</TableHead>
-                <TableHead className="w-[120px] font-semibold tracking-wider text-xs">ACTION</TableHead>
-                <TableHead className="w-[100px] font-semibold tracking-wider text-xs">TICKER</TableHead>
-                <TableHead className="text-right font-semibold tracking-wider text-xs">EXECUTION</TableHead>
-                <TableHead className="text-right font-semibold tracking-wider text-xs">TOTAL VALUE</TableHead>
-                <TableHead className="text-right font-semibold tracking-wider text-xs">REALIZED P&L</TableHead>
-                <TableHead className="font-semibold tracking-wider text-xs w-[300px] pl-8">REASON / NOTES</TableHead>
+                <TableHead className="w-[180px] font-mono tracking-[0.12em] text-[10px] text-muted-foreground">TIME</TableHead>
+                <TableHead className="w-[130px] font-mono tracking-[0.12em] text-[10px] text-muted-foreground">ACTION</TableHead>
+                <TableHead className="w-[100px] font-mono tracking-[0.12em] text-[10px] text-muted-foreground">TICKER</TableHead>
+                <TableHead className="text-right font-mono tracking-[0.12em] text-[10px] text-muted-foreground">EXECUTION</TableHead>
+                <TableHead className="text-right font-mono tracking-[0.12em] text-[10px] text-muted-foreground">TOTAL VALUE</TableHead>
+                <TableHead className="text-right font-mono tracking-[0.12em] text-[10px] text-muted-foreground">REALIZED P&L</TableHead>
+                <TableHead className="font-mono tracking-[0.12em] text-[10px] text-muted-foreground w-[300px] pl-8">REASON / NOTES</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

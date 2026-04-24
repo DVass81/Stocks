@@ -181,21 +181,21 @@ export default function Positions() {
   const activePositions = positions?.filter(p => p.status === 'active' || p.status === 'trimmed') || [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-bold tracking-tight">Active Positions</h1>
-          <p className="text-muted-foreground text-sm">Manage open trades and tactical exits.</p>
+        <div>
+          <h1 className="text-lg font-mono font-bold tracking-[0.1em] text-foreground uppercase">Active Positions</h1>
+          <p className="text-[11px] text-muted-foreground font-mono mt-0.5">Open trades, risk weights, and tactical exit management.</p>
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium tracking-wide w-full sm:w-auto">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-mono text-[11px] tracking-[0.1em] h-8 px-4 w-full sm:w-auto">
               NEW POSITION
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px] border-border bg-card">
+          <DialogContent className="sm:max-w-[425px] border-border bg-card rounded-none">
             <DialogHeader>
-              <DialogTitle>Open New Position</DialogTitle>
+              <DialogTitle className="font-mono text-sm tracking-wider uppercase">Open New Position</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleCreate} className="space-y-4 pt-4">
               <div className="grid grid-cols-2 gap-4">
@@ -226,20 +226,20 @@ export default function Positions() {
         </Dialog>
       </div>
 
-      <Card className="bg-card border-border overflow-hidden">
+      <Card className="bg-card border-border overflow-hidden rounded-none">
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-black/20">
+            <TableHeader className="bg-black/25">
               <TableRow className="border-border/50 hover:bg-transparent">
-                <TableHead className="w-[110px] font-semibold tracking-wider text-xs">TICKER</TableHead>
-                <TableHead className="font-semibold tracking-wider text-xs">SIZE & AVG COST</TableHead>
-                <TableHead className="text-right font-semibold tracking-wider text-xs">MKT VALUE</TableHead>
-                <TableHead className="text-right font-semibold tracking-wider text-xs">TOTAL P&L</TableHead>
-                <TableHead className="text-right font-semibold tracking-wider text-xs w-[100px]">WEIGHT</TableHead>
-                <TableHead className="text-right font-semibold tracking-wider text-xs w-[80px]">RSI</TableHead>
-                <TableHead className="text-center font-semibold tracking-wider text-xs w-[100px]">7D TREND</TableHead>
-                <TableHead className="text-center font-semibold tracking-wider text-xs w-[100px]">SIGNAL</TableHead>
-                <TableHead className="text-right font-semibold tracking-wider text-xs w-[140px]">ACTIONS</TableHead>
+                <TableHead className="w-[120px] font-mono tracking-[0.12em] text-[10px] text-muted-foreground">TICKER</TableHead>
+                <TableHead className="font-mono tracking-[0.12em] text-[10px] text-muted-foreground">SIZE & AVG COST</TableHead>
+                <TableHead className="text-right font-mono tracking-[0.12em] text-[10px] text-muted-foreground">MKT VALUE</TableHead>
+                <TableHead className="text-right font-mono tracking-[0.12em] text-[10px] text-muted-foreground">TOTAL P&L</TableHead>
+                <TableHead className="text-right font-mono tracking-[0.12em] text-[10px] text-muted-foreground w-[100px]">WEIGHT</TableHead>
+                <TableHead className="text-right font-mono tracking-[0.12em] text-[10px] text-muted-foreground w-[80px]">RSI</TableHead>
+                <TableHead className="text-center font-mono tracking-[0.12em] text-[10px] text-muted-foreground w-[100px]">7D TREND</TableHead>
+                <TableHead className="text-center font-mono tracking-[0.12em] text-[10px] text-muted-foreground w-[100px]">SIGNAL</TableHead>
+                <TableHead className="text-right font-mono tracking-[0.12em] text-[10px] text-muted-foreground w-[140px]">ACTIONS</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

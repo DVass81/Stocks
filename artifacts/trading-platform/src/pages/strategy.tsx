@@ -88,10 +88,10 @@ export default function Strategy() {
   const isConservativeActive = form.preset === 'conservative';
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight">Strategy Engine</h1>
-        <p className="text-muted-foreground text-sm">Configure quantitative parameters for automated position sizing and risk management.</p>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-lg font-mono font-bold tracking-[0.1em] text-foreground uppercase">Strategy Engine</h1>
+        <p className="text-[11px] text-muted-foreground font-mono mt-0.5">Quantitative parameters for automated position sizing and risk management.</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
